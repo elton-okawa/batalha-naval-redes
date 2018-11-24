@@ -1,13 +1,16 @@
 class Map:
     def __init__(self, size):
         self.map = self.__createMap(size)
+        self.size = size
 
     # imprime mapa aliado
     def __str__(self):
         mapStr = ""
-        mapStr += ("\n  A B C D E F G H")
-        for lin in range(8):
-            mapStr += ("\n%i " %(lin + 1))
+        mapStr += "\n "
+        for col in range(self.size):
+            mapStr += " " + str(col + 1)
+        for lin in range(self.size):
+            mapStr += ("\n%s " %(chr(ord('A') + lin)))
             for col in range(8):
                 mapStr += ("%c " %self.map[lin][col])
         return mapStr
@@ -43,7 +46,7 @@ class Map:
         return map
 
     def __convertCoord(self, lin, col):
-        return ord(lin) - ord('A'), col - 1
+        return ord(lin) - ord('A'), int(col) - 1
 
 def main():
     aliado = Map(8)
@@ -54,4 +57,4 @@ def main():
     print(aliado.fire('B', 1))
     print(aliado)
 
-main()
+# main()

@@ -28,45 +28,78 @@ def main():
     data = input("Type a message: ")
     
     while data.lower() != 'exit' and data != '':
-        inputText = data.split()
-        if inputText[0].lower() == 'connect':
-            if connected:
-                print("You've already connected")
-            else:
-                try:
-                    if len(inputText) > 2:
-                        print("Connecting to '%s' port %i" %(inputText[1], int(inputText[2])))
-                        s.connect((inputText[1], int(inputText[2])))
+        if not connected:
+            inputText = data.split()
+            if inputText[0].lower() == 'connect':
+                if connected:
+                    print("You've already connected")
+                else:
+                    try:
+                        if len(inputText) > 2:
+                            print("Connecting to '%s' port %i" % (inputText[1], int(inputText[2])))
+                            s.connect((inputText[1], int(inputText[2])))
+                        else:
+                            print("Connecting to 'localhost' port %i\n" % DEFAULT_PORT)
+                            s.connect(('localhost', DEFAULT_PORT))
+                        connected = True
+                    except:
+                        print("\nConnection denied: ", sys.exc_info()[0])
+                        traceback.print_exc()
+                        print("\tCheck if server is waiting for connections")
+                        print("\tCheck connect arguments\n")
+            elif connected:
+                if inputText[0].lower() == 'get':
+                    if len(inputText) == 2:
+                        getFunction(s, inputText[0], inputText[1])
                     else:
-                        print("Connecting to 'localhost' port %i\n" %DEFAULT_PORT)
-                        s.connect(('localhost', DEFAULT_PORT))
-                    connected = True
-                except:
-                    print("\nConnection denied: ", sys.exc_info()[0])
-                    traceback.print_exc()
-                    print("\tCheck if server is waiting for connections")
-                    print("\tCheck connect arguments\n")
-        elif connected:
-            if inputText[0].lower() == 'get':
-                if len(inputText) == 2:
-                    getFunction(s, inputText[0], inputText[1])
+                        print("\nError in GET format\n")
+                elif inputText[0].lower() == 'put':
+                    if len(inputText) == 2:
+                        putFunction(s, inputText[0], inputText[1])
+                    else:
+                        print("\nError in PUT format\n")
                 else:
-                    print("\nError in GET format\n")
-            elif inputText[0].lower() == 'put':
-                if len(inputText) == 2:
-                    putFunction(s, inputText[0], inputText[1])
-                else:
-                    print("\nError in PUT format\n")
+                    s.sendall(bytes(data, ENCODE))
+                    print("Received data: %s\n" % s.recv(50).decode(ENCODE))
             else:
-                s.sendall(bytes(data, ENCODE))
-                print("Received data: %s\n" %s.recv(50).decode(ENCODE))
+                print("You must first get connected\n")
+                data = input("Type a message: ")
         else:
-            print("You must first get connected\n")
-        data = input("Type a message: ")
+            battleshipFunction(s)
+
+        # data = input("Type a message: ")
 
     print("Closing socket")
     s.close()
     connected = False
+
+def battleshipFunction(s):
+    waitPhase(s)
+    print(s.recv(256).decode(ENCODE))
+    placePhase(s)
+
+def waitPhase(s):
+    message = s.recv(256).decode(ENCODE)
+    print(message)
+    while(message != "Ready to play"):
+        message = s.recv(256).decode(ENCODE)
+        print(message)
+
+def placePhase(s):
+    message = s.recv(256).decode(ENCODE)
+    while(message != "end"):
+        if message == "turn":
+            while (message == "turn"):
+                print(s.recv(256).decode(ENCODE), end='') # print da frase
+                s.sendall(bytes(input(), ENCODE))
+                message = s.recv(256).decode(ENCODE) # recebe ok quando der certo, turn quando for errado
+                if (message == 'ok'):
+                    print(s.recv(256).decode(ENCODE)) # print do mapa
+        elif message == "wait":
+            print(s.recv(256).decode(ENCODE))
+
+        message = s.recv(256).decode(ENCODE)
+
 
 def getFunction(s, comando, nomeArquivo):
     s.sendall(bytes(comando + ' ' + nomeArquivo, ENCODE))

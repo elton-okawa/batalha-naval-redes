@@ -16,7 +16,13 @@ import threading
 import os.path
 from os import path
 
+from src.Player import Player
+
 ENCODE = 'UTF-8'
+MAP_SIZE = 8
+TURN = 'turn'
+WAIT = 'wait'
+OK = 'ok'
 
 # print_lock = threading.Lock() 
 
@@ -27,13 +33,21 @@ def main():
 
     s.listen()
 
-
+    connected = 0
     try:
         while True:
             print('Waiting for connection')
-            connection, client_address = s.accept()
-            # print_lock.acquire() 
-            start_new_thread(handleRequest, (connection, client_address)) 
+            player1, player1Address = s.accept()
+            # print_lock.acquire()
+            player1.sendall(bytes('Waiting for another player\n', ENCODE))
+
+            player2, player2Address = s.accept()
+            player1.sendall(bytes('Ready to play', ENCODE))
+            player2.sendall(bytes('Ready to play', ENCODE))
+            start_new_thread(battleshipFunction, (player1, player2))
+
+            # connection, client_address = s.accept()
+            # start_new_thread(handleRequest, (connection, client_address))
         # try:
         #     print('Connection from %s' %str(client_address))
 
@@ -119,5 +133,45 @@ def putFunction (connection, archiveName, length, client_address):
     file.write(fileReceived.decode(ENCODE))
     file.close()
     print('File received successfully from %s\n' %str(client_address))
+
+def battleshipFunction(player1Connection, player2Connection):
+    player1 = Player(player1Connection, MAP_SIZE, ENCODE)
+    player2 = Player(player2Connection, MAP_SIZE, ENCODE)
+    placePhase(player1, player2)
+
+def placePhase(player1, player2):
+    messageAll(player1, player2,
+               "=========================================\n"
+               "\n"
+               "Fase de escolha da posição dos navios\n"
+               "\n"
+               "=========================================\n")
+    for i in range(3):
+        communicationMessage(player1, player2)
+        placeForPlayer(player1, player2, i)
+        communicationMessage(player2, player1)
+        placeForPlayer(player2, player1, i)
+
+def messageAll(player1, player2, message):
+    player1.sendMessage(message)
+    player2.sendMessage(message)
+
+def communicationMessage(playerTurn, playerWaiting):
+    playerTurn.sendMessage(TURN)
+    playerWaiting.sendMessage(WAIT)
+
+def placeForPlayer(playerPlacing, playerWaiting, number):
+    playerWaiting.sendMessage("Esperando o outro jogador.")
+    playerPlacing.sendMessage("%dº navio: " % (number + 1))
+    message = playerPlacing.receiveMessage()
+    lin, col = message.split()
+    result = playerPlacing.place(lin, col)
+    while (not result):
+        playerPlacing.sendMessage(TURN)
+        playerPlacing.sendMessage("\nInválido, digite novamente o %dº navio: " % (number + 1))
+        lin, col = message.split()
+        result = playerPlacing.place(lin, col)
+    playerPlacing.sendMessage(OK)
+    playerPlacing.sendMessage(str(playerPlacing.getMap()) + "\n")
 
 main()
