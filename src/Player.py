@@ -4,6 +4,7 @@ class Player:
     def __init__(self, connection, mapSize, encode):
         self.connection = connection
         self.map = Map(mapSize)
+		self.enemyMap = Map(mapSize)
         self.score = 0
         self.encode = encode
 
@@ -15,12 +16,24 @@ class Player:
 
     def place(self, lin, col):
         return self.map.place(lin, col)
+	
+	def fire(self, lin, col):
+		return self.map.fire(lin, col)
+	
+	def updateEnemyMap (self, lin, col, char):
+		self.enemyMap.updateMap(lin, col, char)
+	
+	def printMap(self):
+		return self.map.__str__()
 
     def getMap(self):
         return self.map
+		
+	def getEnemyMap(self):
+		return self.enemyMap
 
-    def updateScore(self, score):
-        self.score += score
+    def updateScore(self):
+        self.score += 1
 
     def getScore(self):
         return self.score

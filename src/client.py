@@ -77,6 +77,8 @@ def battleshipFunction(s):
     waitPhase(s)
     print(s.recv(256).decode(ENCODE))
     placePhase(s)
+	print(s.recv(256).decode(ENCODE))
+	gamePhase(s)
 
 def waitPhase(s):
     message = s.recv(256).decode(ENCODE)
@@ -100,7 +102,24 @@ def placePhase(s):
 
         message = s.recv(256).decode(ENCODE)
 
-
+def gamePhase(s):
+	message = s.recv(256).decode(ENCODE)
+	while(message != "end"):
+		if message == "turn":
+			while (message == "turn"):
+				print(s.recv(256).decode(ENCODE), end='') # print da frase
+                s.sendall(bytes(input(), ENCODE))
+				message = s.recv(256).decode(ENCODE) # recebe ok quando der certo, turn quando for errado
+				if (message == 'ok'):
+                    print(s.recv(256).decode(ENCODE)) # print do mapa
+		elif message == "wait":
+            print(s.recv(256).decode(ENCODE))
+		
+		print(s.recv(256).decode(ENCODE)) #print do outcome
+		print(s.recv(256).decode(ENCODE)) #print da mensagem de controle (vitoria ou troca de rodada)
+		message = s.recv(256).decode(ENCODE)
+	
+				
 def getFunction(s, comando, nomeArquivo):
     s.sendall(bytes(comando + ' ' + nomeArquivo, ENCODE))
     dataResp = s.recv(64).decode(ENCODE).split()

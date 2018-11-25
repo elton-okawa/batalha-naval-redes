@@ -23,6 +23,11 @@ class Map:
             return True
         else:
             return False
+			
+	# atualiza o mapa inimigo com o char especificado
+	def updateMap(self, lin, col, char):
+		linInt, colInt = self.__convertCoord(lin, col)
+        self.map[linInt][colInt] = char
 
     # processa uma jogada na posicao especificada
     def fire(self, lin, col):
