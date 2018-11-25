@@ -1,4 +1,4 @@
-from src.Map import Map
+from Map import Map
 
 
 class Player:

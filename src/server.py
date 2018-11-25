@@ -16,7 +16,7 @@ import threading
 import os.path
 from os import path
 
-from src.Player import Player
+from Player import Player
 
 ENCODE = 'UTF-8'
 MAP_SIZE = 8
