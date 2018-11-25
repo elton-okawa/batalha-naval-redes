@@ -20,10 +20,11 @@ from src.Player import Player
 
 ENCODE = 'UTF-8'
 MAP_SIZE = 8
+SHIPS = 1
 TURN = 'turn'
 WAIT = 'wait'
 OK = 'ok'
-
+END = 'end'
 # print_lock = threading.Lock() 
 
 def main():
@@ -138,6 +139,7 @@ def battleshipFunction(player1Connection, player2Connection):
     player1 = Player(player1Connection, MAP_SIZE, ENCODE)
     player2 = Player(player2Connection, MAP_SIZE, ENCODE)
     placePhase(player1, player2)
+    gamePhase(player1, player2)
 
 def placePhase(player1, player2):
     messageAll(player1, player2,
@@ -146,14 +148,13 @@ def placePhase(player1, player2):
                "Fase de escolha da posição dos navios\n"
                "\n"
                "=========================================\n")
-    for i in range(3):
+    for i in range(SHIPS):
         communicationMessage(player1, player2)
         placeForPlayer(player1, player2, i)
         communicationMessage(player2, player1)
         placeForPlayer(player2, player1, i)
-	
-	messageAll("end")
-	gamePhase(player1, player2)
+
+    messageAll(player1, player2, END)
 
 def messageAll(player1, player2, message):
     player1.sendMessage(message)
@@ -178,60 +179,60 @@ def placeForPlayer(playerPlacing, playerWaiting, number):
     playerPlacing.sendMessage(str(playerPlacing.getMap()) + "\n")
 
 def gamePhase (player1, player2):
-	messageAll(player1, player2,
+    messageAll(player1, player2,
                "=========================================\n"
                "\n"
                "Inicio do jogo\n"
                "\n"
                "=========================================\n")
-	while (True)
-		communicationMessage(player1, player2)
-		firePlayer(player1, player2)
-		printMaps (player1, player2)
-		communicationMessage(player2, player1)
-		firePlayer(player2, player1)
-		printMaps (player1, player2)
-		
-		messageAll("end")
+    while (True):
+        communicationMessage(player1, player2)
+        firePlayer(player1, player2)
+        printMaps (player1, player2)
+        if player1.getScore() == SHIPS:
+            messageAll(player1, player2, END)
+            win(player1, player2)
+            break
+        communicationMessage(player2, player1)
+        firePlayer(player2, player1)
+        printMaps (player1, player2)
+        if player2.getScore() == SHIPS:
+            messageAll(player1, player2, END)
+            win(player2, player1)
+            break
 
-def firePlayer(playerFiring, playerWaiting)
-	playerWaiting.sendMessage("Esperando o outro jogador.")
-	playerFiring.sendMessage("Realize sua jogada.")
-	while (True)
-		message = playerFiring.receiveMessage()
-		lin, col = message.split()
-		result = playerWaiting.fire(lin, col)
-		outcome = "Resultado da jogada: "
-		if result == 'X':
-			outcome += "Acerto\n"
-			playerFiring.updateEnemyMap(lin, col, result)
-			playerFiring.updateScore()
-			break
-		elif result == 'A'
-			playerFiring.updateEnemyMap(lin, col, result)
-			outcome += "Agua\n"
-			break
-		elif result == 'E'
-			outcome += "Erro. Jogue novamente.\n"
-			playerWaiting.sendMessage(outcome)
-			playerFiring.sendMessage(TURN)
-	playerFiring.sendMessage(OK)
-	messageAll(playerFiring, playerWaiting, outcome)
-	if playerFiring.getScore() == 3
-		win(playerFiring, playerWaiting)
-	else
-		messageAll("Vez do inimigo")
+
+
+def firePlayer(playerFiring, playerWaiting):
+    playerWaiting.sendMessage("Esperando o outro jogador.")
+    playerFiring.sendMessage("Realize sua jogada: ")
+    result = 'E'
+    while (result == 'E'):
+        message = playerFiring.receiveMessage()
+        lin, col = message.split()
+        result = playerWaiting.fire(lin, col)
+        outcome = "Resultado da jogada: "
+        if result == 'X':
+            outcome += "Acerto\n"
+            playerFiring.updateEnemyMap(lin, col, result)
+            playerFiring.updateScore()
+        elif result == 'A':
+            playerFiring.updateEnemyMap(lin, col, result)
+            outcome += "Agua\n"
+        elif result == 'E':
+            playerFiring.sendMessage(TURN)
+            playerFiring.sendMessage("Erro. Jogue novamente: ")
+    playerFiring.sendMessage(OK)
+    messageAll(playerFiring, playerWaiting, outcome)
 
 #encerrar o jogo
-def win(playerFiring, playerWaiting)
-	playerFiring.sendMessage("Vitoria!")
-	playerWaiting.sendMessage("-22PDL")
-	s.close()
-	
-#imprime para cada jogador o mapa aliado e o inimigo
-def printMaps (player1, player2)
-	player1.sendMessage("Mapa aliado:\n" + player1.getMap.__srt__ + "\n" + "Mapa inimigo:\n" + player1.getEnemyMap.__str__ + "\n")
-	player2.sendMessage("Mapa aliado:\n" + player2.getMap.__srt__ + "\n" + "Mapa inimigo:\n" + player2.getEnemyMap.__str__ + "\n")
+def win(playerFiring, playerWaiting):
+    playerFiring.sendMessage("Vitoria!")
+    playerWaiting.sendMessage("Derrota, -22PDL")
 
-	
+#imprime para cada jogador o mapa aliado e o inimigo
+def printMaps (player1, player2):
+    player1.sendMessage(str(player1))
+    player2.sendMessage(str(player2))
+
 main()

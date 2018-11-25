@@ -22,9 +22,8 @@ def main():
 
     print("Type 'exit' or empty message to exit")
     print("Available commands:")
-    print("\tconnect <hostname> <port> - Use only connect for default values")
-    print("\tGET <archive name> - to get an archive from server")
-    print("\tPUT <archive name> - to send an archive to server\n")
+    print("\tconnect <hostname> <port> - Use only connect for default values\n")
+    print("\t\tafter connect, start playing\n\n")
     data = input("Type a message: ")
     
     while data.lower() != 'exit' and data != '':
@@ -66,6 +65,7 @@ def main():
                 data = input("Type a message: ")
         else:
             battleshipFunction(s)
+            break
 
         # data = input("Type a message: ")
 
@@ -77,8 +77,9 @@ def battleshipFunction(s):
     waitPhase(s)
     print(s.recv(256).decode(ENCODE))
     placePhase(s)
-	print(s.recv(256).decode(ENCODE))
-	gamePhase(s)
+    print(s.recv(256).decode(ENCODE))
+    gamePhase(s)
+    print(s.recv(256).decode(ENCODE))
 
 def waitPhase(s):
     message = s.recv(256).decode(ENCODE)
@@ -93,7 +94,7 @@ def placePhase(s):
         if message == "turn":
             while (message == "turn"):
                 print(s.recv(256).decode(ENCODE), end='') # print da frase
-                s.sendall(bytes(input(), ENCODE))
+                s.sendall(bytes(gameInput(), ENCODE))
                 message = s.recv(256).decode(ENCODE) # recebe ok quando der certo, turn quando for errado
                 if (message == 'ok'):
                     print(s.recv(256).decode(ENCODE)) # print do mapa
@@ -103,23 +104,34 @@ def placePhase(s):
         message = s.recv(256).decode(ENCODE)
 
 def gamePhase(s):
-	message = s.recv(256).decode(ENCODE)
-	while(message != "end"):
-		if message == "turn":
-			while (message == "turn"):
-				print(s.recv(256).decode(ENCODE), end='') # print da frase
-                s.sendall(bytes(input(), ENCODE))
-				message = s.recv(256).decode(ENCODE) # recebe ok quando der certo, turn quando for errado
-				if (message == 'ok'):
-                    print(s.recv(256).decode(ENCODE)) # print do mapa
-		elif message == "wait":
+    message = s.recv(256).decode(ENCODE)
+    while(message != "end"):
+        if message == "turn":
+            while (message == "turn"):
+                print(s.recv(256).decode(ENCODE), end='') # print da frase
+                s.sendall(bytes(gameInput(), ENCODE))
+                message = s.recv(256).decode(ENCODE) # recebe ok quando der certo, turn quando for errado
+        elif message == "wait":
             print(s.recv(256).decode(ENCODE))
-		
-		print(s.recv(256).decode(ENCODE)) #print do outcome
-		print(s.recv(256).decode(ENCODE)) #print da mensagem de controle (vitoria ou troca de rodada)
-		message = s.recv(256).decode(ENCODE)
-	
-				
+
+        print(s.recv(256).decode(ENCODE)) #print do outcome
+        print(s.recv(512).decode(ENCODE)) #print do mapa
+        message = s.recv(256).decode(ENCODE)
+
+def gameInput():
+    originalInputValue = input()
+    inputValue = originalInputValue.split()
+    while (not isValidInput(inputValue)):
+        print("Valores inválidos. Digite novamente: ", end='')
+        originalInputValue = input()
+        inputValue = originalInputValue.split()
+    return originalInputValue
+
+def isValidInput(stringArray):
+    return len(stringArray) == 2 and \
+           len(stringArray[0]) == 1 and stringArray[0].isupper() and \
+           len(stringArray[1]) == 1 and stringArray[1].isdigit()
+
 def getFunction(s, comando, nomeArquivo):
     s.sendall(bytes(comando + ' ' + nomeArquivo, ENCODE))
     dataResp = s.recv(64).decode(ENCODE).split()
