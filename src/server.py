@@ -30,6 +30,7 @@ END = 'end'
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ('localhost', 8080)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(server_address)
 
     s.listen()

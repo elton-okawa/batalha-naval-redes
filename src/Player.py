@@ -1,5 +1,5 @@
 from Map import Map
-
+import time
 
 class Player:
     def __init__(self, connection, mapSize, encode):
@@ -21,6 +21,7 @@ class Player:
         return string
 
     def sendMessage(self, message):
+        time.sleep(0.05)
         self.connection.sendall(bytes(message, self.encode))
 
     def receiveMessage(self):
