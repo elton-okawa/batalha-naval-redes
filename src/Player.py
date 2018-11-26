@@ -13,7 +13,7 @@ class Player:
         string = ""
         string += "Seu status:\n"
         string += "Score: %d\n" %(self.score)
-        string += "Seu mapa:\t\t\t\t\t\tMapa adversário:"
+        string += "Seu mapa:\t\t\t\t\tMapa adversário:"
         ownMap = str(self.map).split('\n')
         enemyMap = str(self.enemyMap).split('\n')
         for i in range(len(ownMap)):
